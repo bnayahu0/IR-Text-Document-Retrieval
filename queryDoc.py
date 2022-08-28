@@ -236,7 +236,7 @@ class QueryIndex:
             if qt=='':
                 print('type some query: Error!')
                 break
-            if qt=='ftq'
+            if qt=='ftq':
                 self.ftq(q)
             if qt=='pq':
                 self.pq(q)

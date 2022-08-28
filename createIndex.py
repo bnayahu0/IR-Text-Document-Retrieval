@@ -113,7 +113,7 @@ class CreateIndex():
     def test_Params(self):
         '''for testing purpose'''
         self.stopwordsFile='./stopwords/english_stopwords.txt'
-        self.corpus='./data/pos/'
+        self.corpus='./data/gut/'
         self.indexFile='./index_db.json'
         self.indexScore='./index_score_db.json'
 
@@ -126,8 +126,10 @@ class CreateIndex():
         self.getStopwords()
 
         documents=[]
-        for file in [doc for doc in os.listdir(self.corpus) if doc.endswith(".txt")]:
-            documents.append(file)
+        for root, dirs, files in os.walk(self.corpus):
+          for file in files:
+           if file.endswith(".txt"):
+             documents.append(os.path.join(root, file))
 
         self.num_documents=len(documents)
         print('number of documents -', self.num_documents)
@@ -135,7 +137,7 @@ class CreateIndex():
 
 
         for doc_name in documents:
-            file_t=open(self.corpus+doc_name,'r')
+            file_t=open(doc_name,'r', encoding='latin-1')
             progress.current += 1
 
             text=file_t.read()
@@ -176,7 +178,7 @@ if __name__=="__main__":
 
     print('\n', "Created Index in =", t,'seconds','\n')
     # c.saveIndex()
-    print('how index looks like for term 'alek' ')
-    print(c.index['alek'])
+    print("how index looks like for term 'food'")
+    print(c.index['food'])
     
 
