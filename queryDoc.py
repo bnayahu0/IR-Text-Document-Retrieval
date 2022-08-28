@@ -50,7 +50,7 @@ class QueryIndex:
 
     def getTerms(self, line):
         line=line.lower()
-        line=re.sub(r'[^a-z0-9 ]',' ' ,line) #put spaces instead of non-alphanumeric characters
+        line=re.sub(r'[^a-z0-9א-ת ]',' ' ,line) #put spaces instead of non-alphanumeric characters
         line=line.split()
         line=[x for x in line if x not in self.sw]
         line=[ porter.stem(word, 0, len(word)-1) for word in line]
@@ -124,8 +124,6 @@ class QueryIndex:
         docScores=[ [self.dotProduct(curDocVec, queryVector), doc] for doc, curDocVec in docVectors.items() ]
         docScores.sort(reverse=True)
         resultDocs=[x[1] for x in docScores][:10]
-        # print document titles instead if document id's
-        # resultDocs=[ self.titleIndex[x] for x in resultDocs ]
         print('\n'.join(resultDocs), '\n')
           
 
@@ -215,11 +213,17 @@ class QueryIndex:
         self.indexFile=param[2]
         self.indexScore=param[3]
 
+    def test_Params_heb(self):
+        '''for testing purpose'''
+        self.stopwordsFile='./stopwords/hebrew_stopwords.txt'
+        self.indexFile='./index_db_heb.json'
+        self.indexScore='./index_score_db_heb.json'
+        
     def test_Params(self):
         '''for testing purpose'''
         self.stopwordsFile='./stopwords/english_stopwords.txt'
-        self.indexFile='./index_db.json'
-        self.indexScore='./index_score_db.json'
+        self.indexFile='./index_db-en.json'
+        self.indexScore='./index_score_db-en.json'
 
     def queryIndex(self):
         # self.getParams()
@@ -236,6 +240,8 @@ class QueryIndex:
             if qt=='':
                 print('type some query: Error!')
                 break
+            if not len(q):
+               break
             if qt=='ftq':
                 self.ftq(q)
             if qt=='pq':

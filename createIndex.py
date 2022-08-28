@@ -45,7 +45,7 @@ class CreateIndex():
         '''given a stream of text, get the terms from the text'''
         line=line.lower()
         # put spaces instead of non-alphanumeric characters
-        line=re.sub(r'[^a-z0-9 ]',' ',line)         
+        line=re.sub(r'[^a-z0-9א-ת ]',' ',line)         
         line=line.split()
         # eliminate the stopwords
         line=[x for x in line if x not in self.sw]  
@@ -112,10 +112,10 @@ class CreateIndex():
 
     def test_Params(self):
         '''for testing purpose'''
-        self.stopwordsFile='./stopwords/english_stopwords.txt'
-        self.corpus='./data/gut/'
-        self.indexFile='./index_db.json'
-        self.indexScore='./index_score_db.json'
+        self.stopwordsFile='./stopwords/hebrew_stopwords.txt'
+        self.corpus='./data/haaretz_txt/'
+        self.indexFile='./index_db_heb.json'
+        self.indexScore='./index_score_db_heb.json'
 
 
     def createIndex(self):
@@ -137,7 +137,7 @@ class CreateIndex():
 
 
         for doc_name in documents:
-            file_t=open(doc_name,'r', encoding='latin-1')
+            file_t=open(doc_name,'r', encoding='utf-8')
             progress.current += 1
 
             text=file_t.read()
@@ -178,7 +178,7 @@ if __name__=="__main__":
 
     print('\n', "Created Index in =", t,'seconds','\n')
     # c.saveIndex()
-    print("how index looks like for term 'food'")
-    print(c.index['food'])
+    print("how index looks like for term 'אוכל'")
+    print(c.index['אוכל'])
     
 
