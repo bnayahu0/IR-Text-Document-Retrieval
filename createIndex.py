@@ -1,7 +1,3 @@
-'''
-	Cantact:    aman.sharefiles@gmail.com
-	Date:       2016
-'''
 
 #!/usr/bin/env python
 
@@ -57,8 +53,8 @@ class CreateIndex():
         '''write the index to the file'''
 
         self.num_documents=int(self.num_documents)
-        f1=open(self.indexFile, 'w')
-        f2=open(self.indexScore, 'w')
+        f1=open(self.indexFile, 'w', encoding='utf-8')
+        f2=open(self.indexScore, 'w', encoding='utf-8')
         print(self.num_documents, file=f2)
         for term in self.index.keys():
             postinglist=[]
@@ -76,38 +72,7 @@ class CreateIndex():
             
         f1.close()
         f2.close()
-
-
-        ## this one is more readable
-        # self.num_documents=float(self.num_documents)
-        # f1=open(self.indexFile, 'w')
-        # f2=open(self.indexScore, 'w')
-        # for term in self.index.keys():
-        #     postinglist=[]
-        #     for p in self.index[term]:
-        #         doc_name=p[0]
-        #         positions=p[1]
-        #         postinglist.append({str(doc_name): positions})
-        #     a = {term: postinglist}
-        #     json.dump(a, f1, indent=4)
-        #     print('', file=f1)
-
-        #     tfData=','.join(map(str,self.tf[term]))
-        #     idfData='{:.4f}'.format(self.num_documents/self.df[term])
-        #     json.dump('|'.join((term, tfData, idfData)), f2, indent=4)
-        #     print('', file=f2)
-            
-        # f1.close()
-        # f2.close()
         
-
-    def getParams(self):
-        '''get the parameters stopwords file, collection file, and the output index file'''
-        param=sys.argv
-        self.stopwordsFile=param[1]
-        self.corpus=param[2]
-        self.indexFile=param[3]
-        self.indexScore=param[4]
 
 
     def test_Params(self):
@@ -120,9 +85,7 @@ class CreateIndex():
 
     def createIndex(self):
         '''main of the program, creates the index'''
-        # self.getParams()
         self.test_Params()
-        # self.corpusFile=open(self.corpus,'r')
         self.getStopwords()
 
         documents=[]
@@ -177,7 +140,6 @@ if __name__=="__main__":
     t = time()-t
 
     print('\n', "Created Index in =", t,'seconds','\n')
-    # c.saveIndex()
     print("how index looks like for term 'אוכל'")
     print(c.index['אוכל'])
     

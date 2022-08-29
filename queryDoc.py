@@ -1,9 +1,4 @@
-'''
-	Cantact:    aman.sharefiles@gmail.com
-	Date:       2016
-'''
-
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 import sys
 import re
@@ -17,62 +12,57 @@ import json
 from functools import reduce
 import copy
 
+porter = PorterStemmer()
 
-
-porter=PorterStemmer()
 
 class QueryIndex:
 
     def __init__(self):
-        self.index={}
-        #term frequencies
-        self.tf={} 
-        #inverse document frequencies     
-        self.idf={}    
+        self.index = {}
+        # term frequencies
+        self.tf = {}
+        # inverse document frequencies
+        self.idf = {}
 
-    # sort the list with decreasing order of length( number of documents per terms)
-    # and take the intersection of the set 
+        # sort the list with decreasing order of length( number of documents per terms)
+
+    # and take the intersection of the set
     # this method is better complexity wise
-    def intersectLists(self,lists):
-        if len(lists)==0:
+    def intersectLists(self, lists):
+        if len(lists) == 0:
             return []
         # start intersecting from the smaller list
         lists.sort(key=len)
-        return list(reduce(lambda x,y: set(x)&set(y),lists))
-        
-    
+        return list(reduce(lambda x, y: set(x) & set(y), lists))
+
     def getStopwords(self):
-        f=open(self.stopwordsFile, 'r')
-        stopwords=[line.rstrip() for line in f]
-        self.sw=dict.fromkeys(stopwords)
+        f = open(self.stopwordsFile, 'r')
+        stopwords = [line.rstrip() for line in f]
+        self.sw = dict.fromkeys(stopwords)
         f.close()
-        
 
     def getTerms(self, line):
-        line=line.lower()
-        line=re.sub(r'[^a-z0-9א-ת ]',' ' ,line) #put spaces instead of non-alphanumeric characters
-        line=line.split()
-        line=[x for x in line if x not in self.sw]
-        line=[ porter.stem(word, 0, len(word)-1) for word in line]
+        line = line.lower()
+        line = re.sub(r'[^a-z0-9א-ת ]', ' ', line)  # put spaces instead of non-alphanumeric characters
+        line = line.split()
+        line = [x for x in line if x not in self.sw]
+        line = [porter.stem(word, 0, len(word) - 1) for word in line]
         return line
-        
-    
+
     def getPostings(self, terms):
         # all terms in the list are guaranteed to be in the index
-        return [ self.index[term] for term in terms ]
-    
-    
+        return [self.index[term] for term in terms]
+
     def getDocsFromPostings(self, postings):
         # no empty list in postings
-        return [ [x[0] for x in p] for p in postings ]
-
+        return [[x[0] for x in p] for p in postings]
 
     def readIndex(self):
         # read main index
-        f1=open(self.indexFile, 'r');
-        f2=open(self.indexScore, 'r')
+        f1 = open(self.indexFile, 'r', encoding='utf-8');
+        f2 = open(self.indexScore, 'r', encoding='utf-8')
         # first read the number of documents
-        self.numDocuments=int(f2.readline().strip())
+        self.numDocuments = int(f2.readline().strip())
 
         for line in f1:
             score = f2.readline()[1:-2]
@@ -82,181 +72,162 @@ class QueryIndex:
             _term, tf, idf = score.split('|')
 
             # postings=['docId1:pos1,pos2','docID2:pos1,pos2']
-            postings=postings.split(';')  
+            postings = postings.split(';')
             # postings=[['docId1', 'pos1,pos2'], ['docID2', 'pos1,pos2']]      
-            postings=[x.split(':') for x in postings] 
-            postings=[ [x[0], list(map(int, x[1].split(',')))] for x in postings ]             #final postings list  
-            self.index[term]=postings
+            postings = [x.split(':') for x in postings]
+            postings = [[x[0], list(map(int, x[1].split(',')))] for x in postings]  # final postings list
+            self.index[term] = postings
 
             # read term frequencies
-            tf=tf.split(',')
-            self.tf[term]=list(map(float, tf))
+            tf = tf.split(',')
+            self.tf[term] = list(map(float, tf))
             # read inverse document frequency
-            self.idf[term]=float(idf.strip()[:-1])
+            self.idf[term] = float(idf.strip()[:-1])
 
         f1.close()
         f2.close()
         print("read index complete\n")
 
-        
-     
     def dotProduct(self, vec1, vec2):
-        if len(vec1)!=len(vec2):
+        if len(vec1) != len(vec2):
             return 0
-        return sum([ x*y for x,y in zip(vec1,vec2) ])
-            
-        
+        return sum([x * y for x, y in zip(vec1, vec2)])
+
     def rankDocuments(self, terms, docs):
         # term at a time evaluation
-        docVectors=defaultdict(lambda: [0]*len(terms))
-        queryVector=[0]*len(terms)
+        docVectors = defaultdict(lambda: [0] * len(terms))
+        queryVector = [0] * len(terms)
         for termIndex, term in enumerate(terms):
             if term not in self.index:
                 continue
-            
-            queryVector[termIndex]=self.idf[term]
-            
+
+            queryVector[termIndex] = self.idf[term]
+
             for docIndex, (doc, postings) in enumerate(self.index[term]):
                 if doc in docs:
-                    docVectors[doc][termIndex]=self.tf[term][docIndex]
-                    
-        # calculate the score of each doc
-        docScores=[ [self.dotProduct(curDocVec, queryVector), doc] for doc, curDocVec in docVectors.items() ]
-        docScores.sort(reverse=True)
-        resultDocs=[x[1] for x in docScores][:10]
-        print('\n'.join(resultDocs), '\n')
-          
+                    docVectors[doc][termIndex] = self.tf[term][docIndex]
 
-    def ftq(self,q):
+        # calculate the score of each doc
+        docScores = [[self.dotProduct(curDocVec, queryVector), doc] for doc, curDocVec in docVectors.items()]
+        docScores.sort(reverse=True)
+        resultDocs = [x[1] for x in docScores][:10]
+        print('\n'.join(resultDocs), '\n')
+
+    def ftq(self, q):
         """Free Text Query"""
-        q=self.getTerms(q)
-        if len(q)==0:
+        q = self.getTerms(q)
+        if len(q) == 0:
             print('')
             return
-        
-        li=set()
+
+        li = set()
         # li will store the list of documents that contains all the terms
         for term in q:
             try:
-                postings=self.index[term]
-                docs=[x[0] for x in postings]
+                postings = self.index[term]
+                docs = [x[0] for x in postings]
                 # li is taking the intersection of the documents that contains all the term
-                li=li|set(docs)
+                li = li | set(docs)
             except:
-                #term not in index
+                # term not in index
                 pass
-        
-        li=list(li)
+
+        li = list(li)
         self.rankDocuments(q, li)
 
-
-    def pq(self,q):
+    def pq(self, q):
         '''Phrase Query'''
-        originalQuery=q
-        q=self.getTerms(q)
-        if len(q)==0:
-            print ('')
+        originalQuery = q
+        q = self.getTerms(q)
+        if len(q) == 0:
+            print('')
             return
 
-        phraseDocs=self.pqDocs(q)
+        phraseDocs = self.pqDocs(q)
         self.rankDocuments(q, phraseDocs)
-        
-        
+
     def pqDocs(self, q):
         """ here q is not the query, it is the list of terms """
-        phraseDocs=[]
-        length=len(q)
+        phraseDocs = []
+        length = len(q)
         # first find matching docs
+        #q = list(map(lambda term: str(re.sub('.', lambda x: r'\u%04X' % ord(x.group()), term)).lower(), q))
         for term in q:
             if term not in self.index:
                 # if a term doesn't appear in the index
                 # there can't be any document maching it
                 return []
 
-
         # posting of all terms in the query
-        postings=self.getPostings(q)
+        postings = self.getPostings(q)
         # returns list of documents in which that term occour, same for all terms 
         # like a list of list
-        docs=self.getDocsFromPostings(postings)
+        docs = self.getDocsFromPostings(postings)
         # returns only those documents that contains all the terms
-        docs=self.intersectLists(docs)
+        docs = self.intersectLists(docs)
         # check whether the term ordering in the docs is like in the phrase query
         for i in range(len(postings)):
-            postings[i]=[x for x in postings[i] if x[0] in docs]
-        
-        
+            postings[i] = [x for x in postings[i] if x[0] in docs]
+
         # subtract i from the ith terms location in the docs
         # this is important since we are going to modify the postings list
-        postings=copy.deepcopy(postings)    
-        
+        postings = copy.deepcopy(postings)
+
         for i in range(len(postings)):
             for j in range(len(postings[i])):
-                postings[i][j][1]=[x-i for x in postings[i][j][1]]
-        
+                postings[i][j][1] = [x - i for x in postings[i][j][1]]
+
         # intersect the locations
-        result=[]
+        result = []
         for i in range(len(postings[0])):
-            li=self.intersectLists( [x[i][1] for x in postings] )
-            if li==[]:
+            li = self.intersectLists([x[i][1] for x in postings])
+            if li == []:
                 continue
             else:
-                result.append(postings[0][i][0])    
-                #append the docid to the result
-        
+                result.append(postings[0][i][0])
+                # append the docid to the result
+
         return result
 
-        
-    def getParams(self):
-        param=sys.argv
-        self.stopwordsFile=param[1]
-        self.indexFile=param[2]
-        self.indexScore=param[3]
 
-    def test_Params_heb(self):
+    def get_Params_heb(self):
         '''for testing purpose'''
-        self.stopwordsFile='./stopwords/hebrew_stopwords.txt'
-        self.indexFile='./index_db_heb.json'
-        self.indexScore='./index_score_db_heb.json'
-        
-    def test_Params(self):
+        self.stopwordsFile = './stopwords/hebrew_stopwords.txt'
+        self.indexFile = './index_db_heb.json'
+        self.indexScore = './index_score_db_heb.json'
+
+    def get_Params_eng(self):
         '''for testing purpose'''
-        self.stopwordsFile='./stopwords/english_stopwords.txt'
-        self.indexFile='./index_db-en.json'
-        self.indexScore='./index_score_db-en.json'
+        self.stopwordsFile = './stopwords/english_stopwords.txt'
+        self.indexFile = './index_db-en.json'
+        self.indexScore = './index_score_db-en.json'
 
     def queryIndex(self):
         # self.getParams()
-        self.test_Params()
-        self.readIndex()  
-        self.getStopwords() 
-        par=sys.argv
+        self.get_Params_eng()
+        self.readIndex()
+        self.getStopwords()
+        par = sys.argv
         qt = par[1]
 
         while True:
-        #     user query
+            #     user query
             q = sys.stdin.readline()
 
-            if qt=='':
+            if qt == '':
                 print('type some query: Error!')
                 break
-            if not len(q):
-               break
-            if qt=='ftq':
+            if q == 'exit1':
+                break
+            if qt == 'ftq':
                 self.ftq(q)
-            if qt=='pq':
+            if qt == 'pq':
                 self.pq(q)
 
         print("program end")
-        
-        
-if __name__=='__main__':
-    q=QueryIndex()
+
+
+if __name__ == '__main__':
+    q = QueryIndex()
 
     q.queryIndex()
-    print(q.index['alek'])
-
-
-
-
-    
