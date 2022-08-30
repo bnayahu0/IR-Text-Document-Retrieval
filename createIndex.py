@@ -75,17 +75,29 @@ class CreateIndex():
         
 
 
-    def test_Params(self):
-        '''for testing purpose'''
+    def get_Params_heb(self):
         self.stopwordsFile='./stopwords/hebrew_stopwords.txt'
         self.corpus='./data/haaretz_txt/'
         self.indexFile='./index_db_heb.json'
         self.indexScore='./index_score_db_heb.json'
 
+    def get_Params_eng(self):
+        self.stopwordsFile='./stopwords/english_stopwords.txt'
+        self.corpus='./data/gut/'
+        self.indexFile='./index_db-en.json'
+        self.indexScore='./index_score_db-en.json'
+
 
     def createIndex(self):
         '''main of the program, creates the index'''
-        self.test_Params()
+        par = sys.argv
+        lang = par[1]
+        if lang == 'heb':
+            self.get_Params_heb()
+            enc = 'utf-8'
+        elif lang == 'eng' or lang == '':
+            self.get_Params_eng()
+            enc = 'latin-1'
         self.getStopwords()
 
         documents=[]
@@ -100,7 +112,7 @@ class CreateIndex():
 
 
         for doc_name in documents:
-            file_t=open(doc_name,'r', encoding='utf-8')
+            file_t=open(doc_name,'r', encoding=enc)
             progress.current += 1
 
             text=file_t.read()

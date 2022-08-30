@@ -119,7 +119,8 @@ class QueryIndex:
         if len(q) == 0:
             print('')
             return
-
+        if self.lang == 'heb':
+            q = list(map(lambda term: str(re.sub('.', lambda x: r'\u%04X' % ord(x.group()), term)).lower(), q))
         li = set()
         # li will store the list of documents that contains all the terms
         for term in q:
@@ -136,22 +137,20 @@ class QueryIndex:
         self.rankDocuments(q, li)
 
     def pq(self, q):
-        '''Phrase Query'''
         originalQuery = q
         q = self.getTerms(q)
         if len(q) == 0:
             print('')
             return
-
+        if self.lang == 'heb':
+            q = list(map(lambda term: str(re.sub('.', lambda x: r'\u%04X' % ord(x.group()), term)).lower(), q))
         phraseDocs = self.pqDocs(q)
         self.rankDocuments(q, phraseDocs)
 
     def pqDocs(self, q):
-        """ here q is not the query, it is the list of terms """
         phraseDocs = []
         length = len(q)
         # first find matching docs
-        #q = list(map(lambda term: str(re.sub('.', lambda x: r'\u%04X' % ord(x.group()), term)).lower(), q))
         for term in q:
             if term not in self.index:
                 # if a term doesn't appear in the index
@@ -203,12 +202,16 @@ class QueryIndex:
         self.indexScore = './index_score_db-en.json'
 
     def queryIndex(self):
-        # self.getParams()
-        self.get_Params_eng()
-        self.readIndex()
-        self.getStopwords()
         par = sys.argv
         qt = par[1]
+        self.lang = par[2]
+        if self.lang == 'heb':
+          self.get_Params_heb()
+        elif self.lang == 'eng' or self.lang == '':
+            self.get_Params_eng()
+        self.readIndex()
+        self.getStopwords()
+
 
         while True:
             #     user query
